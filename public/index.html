@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Local login demo</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <main>
+      <h1>Local login demo</h1>
+      <p>Loopback-only demonstration. Use synthetic input only, never real or sensitive credentials.</p>
+
+      <section id="login-view" aria-labelledby="login-heading">
+        <h2 id="login-heading">Login</h2>
+        <form id="login-form" action="/api/login" method="post">
+          <fieldset id="login-fields" disabled>
+            <legend>Demo credentials</legend>
+            <label for="username">Username</label>
+            <input id="username" name="username" type="text" autocomplete="off"
+              autocapitalize="none" spellcheck="false" required>
+
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="off" required>
+
+            <button type="submit">Login</button>
+          </fieldset>
+        </form>
+        <noscript><p>JavaScript is required to submit this demo form.</p></noscript>
+      </section>
+
+      <p id="feedback" role="status" aria-live="polite" aria-atomic="true"></p>
+
+      <section id="success-view" aria-labelledby="success-heading" hidden>
+        <h2 id="success-heading" tabindex="-1">Local demo landing view</h2>
+        <p>The backend accepted the submitted credentials.</p>
+        <p>This display-only view is not a protected resource. No session, token, or
+          authorization state was created. This is not production authentication.</p>
+      </section>
+    </main>
+  </body>
+</html>
