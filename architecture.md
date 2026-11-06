@@ -1,87 +1,91 @@
-# Architecture: Welcome Page
+# Architecture: Welcome HTML Page (Personalized Message)
 
-Run branch: story/welcome-page-20261102084509-791e9e7a
-Input: requirements.md (same directory)
-Approval status: NOT APPROVED. Automated draft; no design review has occurred and no human approval is implied.
+Run branch: story/welcome-html-page-20261106082359-e683a9bb
+Input: requirements.md (same directory; Confluence page 786433, version 2)
+Approval status: NOT APPROVED (automated draft). No design review has occurred and no human approval is implied.
+
+Supersession notice: This document supersedes the earlier architecture for the story "Welcome to EPAM." (previous run branch story/welcome-page-20261102084509-791e9e7a). The user explicitly authorized replacing prior-run lifecycle files on this run branch; the old version remains in git history.
 
 ## 1. Overview
-A single static HTML file that shows "Welcome to EPAM." when opened in a browser. There is no backend, build, script or external resource (FR-1, FR-3).
+A single static HTML file, `index.html`, that displays "Welcome to Epam, Palash!!" when opened in a browser. No backend, build step, script or external resource (FR-1, FR-3, A-1). The existing `index.html` from the earlier story is updated in place (A-2).
 
 ## 2. Components and Responsibilities
 | Component | Responsibility | Traces to |
 |-----------|----------------|-----------|
-| `index.html` (repo root; A-2) | Valid HTML5 document containing the welcome text. This is the only deliverable. | FR-1, FR-2, FR-4 |
+| `index.html` (repo root) | Valid HTML5 document containing the welcome text. Only deliverable. | FR-1, FR-2, FR-3, FR-4 |
 | Browser (external) | Parses and renders the file. | FR-4 |
-| Static check (verification, not shipped) | Confirms the file exists, parses, contains the exact text and has no external references. | AC1-T, AC2-T |
+| Static check (verification, not shipped) | Confirms the file parses, has the exact text and no external references. | AC1-T, AC2-T, AC4-T |
 
 Proposed structure of `index.html`:
-- `<!DOCTYPE html>`, `<html lang="en">`, `<meta charset="utf-8">`, `<title>Welcome</title>` (placeholder, A-4), and a `<meta name="viewport" content="width=device-width, initial-scale=1">` tag (an optional extra, harmless).
-- `<body>` with one `<h1>Welcome to EPAM.</h1>`. A heading is chosen because it gives clear semantics and marks the page's main message (A-3). The text is a single literal string with no whitespace variance, which keeps the exact match simple.
-- No `<script>`, `<link>`, `<img>`, `<form>`, `<a>`, inline event handlers or external fonts.
+- `<!DOCTYPE html>`, `<html lang="en">`, `<meta charset="utf-8">`, `<title>` (text is an open decision, placeholder "Welcome"), optional viewport meta tag.
+- `<body>` with one `<h1>Welcome to Epam, Palash!!</h1>` as a single literal string (A-3, A-7, A-8). It sits in normal document flow so it is in the initial viewport on load (FR-3).
+- No `<script>`, `<link>`, `<img>`, `<form>`, `<a>`, event handlers, external fonts, and no CSS that hides or moves the heading.
+- The old text "Welcome to EPAM." must be fully removed, with no stale text left anywhere in the file.
 
 ## 3. Technology Choices
-- Plain HTML5. No CSS file, framework, bundler or runtime, because R3 rules out added functionality and A-1 assumes no build step.
-- Default browser styling (A-5). If styling is later required, it should be a small inline `<style>` block so the page stays a single file with no extra requests. This is not planned now.
-- Hosting: none specified. The file works from `file://` or any static host (A-1). Hosting is out of scope.
+- Plain HTML5 only. No framework, bundler, runtime or CSS file, because A-1 assumes a static page and the requirements rule out extras.
+- Default browser styling, which gives a readable size and black-on-white contrast (A-5). If styling is later required, use a small inline `<style>` block to keep one file.
+- Hosting: not specified and out of scope. The file works from `file://` or any static host (A-6).
 
 ## 4. Data Flow
 ```mermaid
 flowchart LR
-  U[User] -->|opens file or URL| B[Browser]
-  F[(index.html)] -->|read / static GET| B
-  B -->|renders| P["h1: Welcome to EPAM."]
+  U[User] -->|opens file| B[Browser]
+  F[(index.html)] -->|read| B
+  B -->|renders| P["h1: Welcome to Epam, Palash!!"]
 ```
-There is no user input, no state, no network call made by the page itself, and no persisted data. The only flow is file to browser to rendered text.
+No user input, state, network call or persisted data. The name "Palash" is hardcoded (A-7).
 
 ## 5. Trust Boundaries
-- The only boundary is between the browser and the file source (local disk or a static host).
-- The page has no input, no scripts and no external resources, so it handles no untrusted data and has no injection surface.
-- If hosted, transport security (HTTPS) and response headers such as CSP belong to the host. They are out of scope here (assumption).
-- The source story text is untrusted data. Only the literal phrase "Welcome to EPAM." is taken from it, and it is written as plain text, not interpolated into anything.
-- No secrets or personal data are involved.
+- Only boundary: browser and file source (local disk or static host).
+- No input, scripts or external resources, so there is no injection surface.
+- Story text is untrusted data. Only the literal phrase is used, as plain text, and it contains no markup characters that need escaping.
+- HTTPS and CSP, if hosted, belong to the host (assumption, out of scope).
+- No secrets. The first name "Palash" comes from the story and is the only personal data.
 
 ## 6. Failure Behavior and Limitations
 | Condition | Behavior |
 |-----------|----------|
-| File missing, or a wrong path or name on a host | Browser or host shows its own 404 or file-not-found error. The page cannot handle this itself. |
-| Wrong encoding | Mitigated by `<meta charset="utf-8">` and by using ASCII-only text. |
-| Text altered, such as a missing period or wrong case | Caught by the exact-match check (AC2-T). |
-| JavaScript disabled | No impact, because the page uses no JavaScript. |
-| Old or unusual browser | Plain HTML5 renders everywhere in practice. No browser support target is stated (A-5). |
+| File missing or wrong path | Browser or host shows its own error. The page cannot handle this. |
+| Wrong encoding | Mitigated by `<meta charset="utf-8">` and ASCII-only text. |
+| Text altered (for example "EPAM", one "!", trailing period) | Caught by the exact-match check (AC2-T). |
+| Stale old text remains from the earlier story | Caught by the same check and a search for "EPAM." |
+| JavaScript disabled | No impact. |
 
 Limitations:
-- No styling, responsive tuning or accessibility audit beyond semantic HTML (A-5).
-- No error handling, monitoring or analytics.
-- "Loads successfully" proves only that the file renders. It does not prove any deployment.
+- No styling, responsive tuning or accessibility audit beyond semantic HTML.
+- No quantified "clearly visible" threshold (requirements question 2).
+- No browser support matrix beyond the evergreen assumption (A-6).
+- Proves only that the file renders, not any deployment.
 
 ## 7. Testability
-- AC1-T: open `index.html` in a browser (manual), or run an automated check that the file exists, is non-empty and parses as HTML. Confirm there are no external references, so no failed requests are possible.
-- AC2-T: assert that the rendered text of the `<h1>` equals exactly `Welcome to EPAM.` (case-sensitive, trailing period included).
-- FR-3 check: assert that no `<script>`, `<form>`, `<a>`, `<link>` or `<img>` elements are present.
-- Which approach to use (manual or scripted) is left to planning (requirements question 4). A simple script with no new dependencies is sufficient. A heavy browser-test framework would be disproportionate.
+- AC1-T / FR-1: file is `.html`, has a doctype, and has html, head and body elements.
+- AC2-T / FR-2: the `<h1>` text equals exactly `Welcome to Epam, Palash!!` (case-sensitive), and the file does not contain `Welcome to EPAM.`.
+- AC3-T / FR-3: the heading is in the body, with no hiding or off-screen styling and no script needed.
+- AC4-T / FR-4: no external references, so no failed requests. Manual open in a browser is optional.
+- Manual or scripted verification is left to planning. A simple dependency-free script is sufficient.
 
 ## 8. Requirement Traceability
 | Requirement | Design element |
 |-------------|----------------|
-| FR-1 | One file, `index.html` |
-| FR-2 | `<h1>` with the literal text, visible on load |
-| FR-3 | No scripts, forms, links or network requests; no backend |
-| FR-4 | Valid minimal HTML5 with no external resources |
-| AC1, AC2 | Tests in section 7 |
+| FR-1 | One HTML file, `index.html` |
+| FR-2 | `<h1>` with the exact literal text |
+| FR-3 | Heading in normal flow, default visible styling, no script dependence |
+| FR-4 | Valid minimal HTML5, no external resources |
 
 ## 9. Assumptions (unconfirmed)
-- A-1 to A-6 from requirements.md are inherited unchanged.
-- D-1: The file is `index.html` at the repo root, which matches A-2 and is the usual default for static hosts. The existing `README.md` is not touched.
-- D-2: The page title is "Welcome" (placeholder).
-- D-3: A heading (`<h1>`) is used rather than a paragraph.
-- D-4: The viewport meta tag is included. It is optional and can be dropped if the reviewer prefers the strictest minimal page.
+- A-1 to A-8 are inherited from requirements.md unchanged.
+- D-1: The file is `index.html` at the repo root, updated in place. `README.md` is untouched.
+- D-2: Title is "Welcome" (placeholder).
+- D-3: `<h1>` is used rather than a paragraph.
+- D-4: The viewport meta tag is included. It is optional.
 
 ## 10. Out of Scope
-Backend, APIs, databases, navigation, forms, interactivity, authentication, analytics, frameworks, build tooling, CI, deployment and hosting, branding, theming, localization, and an accessibility audit.
+Backend, APIs, databases, dynamic personalization, navigation, forms, interactivity, authentication, analytics, frameworks, build tooling, CI, deployment, hosting, branding, theming, localization, accessibility certification.
 
 ## 11. Open Questions and Decisions
-1. Confirm the file name and location (`index.html` at the repo root).
-2. Confirm the heading versus paragraph choice and the title text.
-3. Confirm whether any styling, accessibility or browser-support expectation exists. None is assumed.
-4. Choose manual or scripted verification (planning stage).
-5. The repo contains other story branches from earlier runs. Whether a stale `index.html` exists on the base branch is unknown, because only this branch's working tree was inspected. The tree currently holds only `README.md` and `requirements.md`.
+1. Confirm file name and location (root `index.html`, updated in place).
+2. Confirm the page title text.
+3. Confirm any styling, accessibility, contrast or browser-support expectations (none assumed).
+4. Confirm that "Epam" casing and "!!" are intended (interpreted as yes per AC2).
+5. Choose manual or scripted verification (planning stage).

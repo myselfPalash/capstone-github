@@ -1,62 +1,42 @@
 ## Summary
-Adds a single static `index.html` that displays "Welcome to EPAM." in an `<h1>`, so a user can see that the application has loaded. There is no backend, script or external resource. A small text-based check script is included to verify the page. Design review, code review and verification were all automated, and no human approval is implied. This is a draft PR awaiting human review.
+This PR updates the single-page site so it displays exactly "Welcome to Epam, Palash!!" as the page heading. The story is Confluence page 786433 ("User Story:"). It replaces the earlier "Welcome to EPAM." message, and the findstr-based check script now expects the new text. Automated review and text-based verification passed. No browser check was run, and no human approval is implied.
 
 ## Changes Made
-Branch `story/welcome-page-20261102084509-791e9e7a`, based on `main`. `README.md` was not modified.
-
-Deliverable
-- `index.html` (new): HTML5 document with `lang="en"`, `meta charset="utf-8"`, a viewport meta tag, the title "Welcome", and one `<h1>Welcome to EPAM.</h1>`. It has no script, link, image, form or anchor. Covers FR-1 to FR-3 (R1 to R3).
-- `tests/verify-welcome.cmd` (new): a Windows batch check using only built-in `cmd.exe` and `findstr`. It runs four checks: the file exists and is non-empty; the exact case-sensitive heading; the doctype, `html lang` and `meta charset` markers; and the absence of forbidden content (script, form, link, img, anchors, iframe, http/https, src=, href=). It exits 0 only if all checks pass. It takes an optional path argument.
-
-Lifecycle artifacts (new, repo root, automated drafts)
-- `requirements.md`: requirements, acceptance criteria, assumptions and open questions, traced to the story.
-- `architecture.md`: single-file static design, trust boundaries and testability.
-- `design-review.md`: automated review, Round 1, RESULT: PASS, no blocking or high findings (2 medium, 4 low).
-- `impl-plan.md`: tasks T1 to T5, the overwrite protection for `index.html`, and the check design.
-- `verification.md`: recorded commands and results.
-- `pr-draft.md`: this description.
+Modified files (all already existed; none added):
+- `index.html`: changed the heading from `<h1>Welcome to EPAM.</h1>` to `<h1>Welcome to Epam, Palash!!</h1>`. This is a one-line change. Nothing else in the page was altered.
+- `tests/verify-welcome.cmd`: check 2 now matches the new heading case-sensitively. Added check 2b, which fails if "epam" (any case) appears outside the required h1 line, or if the old text "Welcome to EPAM." is present. The other checks and the exit-code logic are unchanged.
+- `requirements.md`, `architecture.md`, `design-review.md`, `impl-plan.md`, `verification.md`: lifecycle artifacts rewritten for this story. They replace the versions written for the earlier "Welcome to EPAM." story, which remain in git history. The run was authorized to replace them. The `pr-draft.md` lifecycle file replaces its earlier version in the same way.
 
 ## Test Evidence
-Source: `verification.md`. Automated verification only.
-
-1. Positive run of `cmd /c "C:\Users\PalashManna\Desktop\capstone-github\tests\verify-welcome.cmd"` against the real `index.html`:
-   - PASS: file exists and is non-empty
-   - PASS: exact heading text
-   - PASS: doctype, html lang, meta charset present
-   - PASS: no forbidden content
-   - RESULT: ALL CHECKS PASSED. Exit code 0.
-2. Negative control against an altered copy kept outside the repo. The trailing period was removed from the heading, and `<script>1</script><a href="http://x">x</a>` was inserted.
-   - Result: FAIL on exact heading text and on forbidden content (`<script`, `<a `, `http:`, `href=`).
-   - RESULT: ONE OR MORE CHECKS FAILED. Exit code 1, as expected.
-3. Static inspection of `index.html`: a single `<h1>Welcome to EPAM.</h1>`, with no scripts, links, forms or images.
-
-Requirement outcomes as recorded:
-- FR-1, FR-2 and FR-3: pass at the text level only.
-- AC2: passes at source level, but rendering was not verified.
-- AC1: only partially evidenced (file existence and structural markers).
-- FR-4: not verified at runtime.
-
-**T5, the manual browser check, was NOT run.** No claim is made that the page was loaded or rendered in a browser. No CI evidence exists or is claimed, and no other test suites exist in the repo.
+All results are from `verification.md`. Only checks that actually ran are listed. The script is `tests\verify-welcome.cmd`, run through `cmd /c`.
+- **Positive run on `index.html`:** every check printed PASS ("file exists and is non-empty", "exact heading text", "no stale epam text", "doctype, html lang, meta charset present", "no forbidden content"). The script printed `RESULT: ALL CHECKS PASSED` and exited 0.
+- **Negative controls:** four modified copies, kept outside the repo, each exited 1 with the expected check failing.
+  - A, old text "Welcome to EPAM.": heading check and stale-text check FAIL, exit 1.
+  - B, single "!": heading check FAIL (stale-text check also FAIL), exit 1.
+  - C, `<!-- EPAM -->` comment added: stale-text check FAIL, exit 1.
+  - D, `<script>` tag added: forbidden-content check FAIL, exit 1.
+- An earlier negative-control attempt had a shell quoting error. Its results were discarded and are not counted.
+- **Code review:** round 1, PASS (automated).
+- **Design review:** round 1, PASS (automated).
+- **Not run:** no browser was launched and no page was rendered. AC3 (message clearly visible) and AC4 (page opens in a browser) rest on static inference only: an h1 in the body, no CSS or script, and no external resources. No HTML validator, accessibility, contrast or cross-browser checks were run. No CI exists, so there is no CI evidence.
+- AC1 and AC2 are PASS by text check only.
 
 ## Known Limitations
-- No browser load was performed (T5 not run), so FR-4 and AC1 are not verified by actual loading or rendering.
-- The check is text-based (`findstr`). It is not an HTML parser or renderer, and it does not test visual display, console errors or failed resource requests.
-- The forbidden-content list is a heuristic. The check relies on the `<h1>` being on a single line.
-- The check script is Windows-only (`cmd.exe`).
-- The title "Welcome", the `<h1>` choice, the viewport meta tag, and the file name and location (`index.html` at the repo root) are unconfirmed assumptions. There is no styling, accessibility audit or browser-support target.
-- Committing `tests/verify-welcome.cmd` was a default decision. The plan notes it can be dropped without affecting `index.html`.
-- The preflight check that no `index.html` exists on `main` is recorded as plan task T1; `verification.md` does not record its output, so reviewers should confirm it.
-- Design review, code review and verification were automated. None of them is human approval.
+- The checks are findstr substring matches. They are not an HTML parser or renderer. They cannot prove how the page renders, its visibility or contrast, or that it loads.
+- AC3 and AC4 are unverified at runtime (static inference only; see Test Evidence).
+- The stale-text check can false-positive on any legitimate use of "epam" outside the h1. It cannot detect stale text in other forms.
+- The forbidden-content and structural-marker checks are substring and exact-string matches. Equivalent valid markup variants would fail.
+- The negative controls cover four defects only.
+- The lifecycle `.md` files and `pr-draft.md` replace the earlier story's versions. Recover the old ones from git history if needed.
+- Status: automated review and verification only. NOT APPROVED by a human.
 
 ## Reviewer Checklist
-- [ ] Confirm that this draft PR is intended, and that no merge or ready-for-review happens without separate human authorization.
-- [ ] Open `index.html` in a browser and confirm it loads without error and shows "Welcome to EPAM." (the T5 gap).
-- [ ] Confirm the file name and location, the title "Welcome", the `<h1>` and the viewport tag, or request changes.
-- [ ] Confirm no `index.html` already existed on `main`, and that nothing was overwritten.
-- [ ] Decide whether `tests/verify-welcome.cmd` should be committed or dropped.
-- [ ] Confirm the scope: no backend, scripts, forms, navigation or additional functionality (R3).
-- [ ] Decide whether the lifecycle `.md` artifacts belong in the repo.
-- [ ] Confirm there are no secrets or personal data in the changed files.
-- [ ] Re-run `cmd /c "<repo>\tests\verify-welcome.cmd"` and confirm exit code 0.
+- [ ] `index.html` contains exactly one `<h1>Welcome to Epam, Palash!!</h1>` and no other "epam" text.
+- [ ] Only the heading line changed in `index.html`.
+- [ ] `tests/verify-welcome.cmd` changes are limited to the new heading match and the stale-text check 2b.
+- [ ] Open `index.html` in a browser to confirm AC3 and AC4 (not done by automation).
+- [ ] Confirm replacing the earlier story's lifecycle files is acceptable (old versions are in git history).
+- [ ] Confirm the story intent (Confluence 786433) is met.
+- [ ] Human approval is still required before merging or marking ready. None is implied by this PR.
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
