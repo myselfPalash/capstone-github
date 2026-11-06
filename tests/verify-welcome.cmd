@@ -21,9 +21,16 @@ if "%SIZE%"=="0" (
 echo PASS: file exists and is non-empty
 
 rem Check 2: exact, case-sensitive heading (no /I)
-findstr /C:"<h1>Welcome to EPAM.</h1>" "%TARGET%" >nul
+findstr /C:"<h1>Welcome to Epam, Palash!!</h1>" "%TARGET%" >nul
 if errorlevel 1 (echo FAIL: exact heading text) else (echo PASS: exact heading text)
 if errorlevel 1 set "RC=1"
+
+rem Check 2b: stale text (L-5): no "epam" (any case) outside the required h1 line; no old text
+set "S2B=0"
+findstr /I /C:"epam" "%TARGET%" | findstr /V /C:"<h1>Welcome to Epam, Palash!!</h1>" >nul && set "S2B=1"
+findstr /C:"Welcome to EPAM." "%TARGET%" >nul && set "S2B=1"
+if "%S2B%"=="0" (echo PASS: no stale epam text) else (echo FAIL: no stale epam text)
+if not "%S2B%"=="0" set "RC=1"
 
 rem Check 3: structural markers
 set "S3=0"
